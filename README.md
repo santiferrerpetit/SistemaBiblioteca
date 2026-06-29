@@ -2,8 +2,8 @@
 
 ## Integrantes
 
-- Santi Ferrer-Petit
-- Garcia-de-la-Vega
+- Santiago Ferrer Petit
+- Manuel García de la Vega
 
 ## Contexto del sistema
 
