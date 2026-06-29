@@ -1,0 +1,14 @@
+# Build
+bin/
+obj/
+
+# IDE
+.idea/
+*.user
+*.suo
+
+# Database
+*.db
+
+# OS
+.DS_Store

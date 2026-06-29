@@ -1,5 +1,10 @@
 # Sistema de Gestión de Biblioteca
 
+## Integrantes
+
+- Santi Ferrer-Petit
+- Garcia-de-la-Vega
+
 ## Contexto del sistema
 
 La biblioteca municipal necesita modernizar su sistema de gestión de préstamos de libros. Los socios pueden retirar libros por un período determinado según su tipo de membresía. Cuando un libro no está disponible, los socios pueden reservarlo para cuando sea devuelto.
@@ -125,6 +130,6 @@ Implementar un reporte accesible desde el menú que muestre el **ranking de los 
 ## Para la entrega
 
 - Completar este [form](https://forms.gle/5xySkjoNBW1AsPBf7) con el link del repositorio y nombre de los integrantes.
-- En el readme de su repositorio escribir los nombre y apellido de los integrantes y nombrar el proyecto de .Net de esta manera: Biblioteca_Apellido1_Apellido2.
+- En el readme de su repositorio escribir los nombre y apellido de los integrantes y nombrar el proyecto de .Net de esta manera: Biblioteca_Ferrer-Petit_Garcia-de-la-Vega.
 - Fecha **tentativa** para la entrega Viernes 26/6(Inclusive).
  
