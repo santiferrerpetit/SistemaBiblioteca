@@ -9,6 +9,8 @@ class Program
 
         Console.WriteLine("=== SISTEMA DE GESTIÓN DE BIBLIOTECA ===");
 
+        MostrarLibros(servicio);
+
         bool salir = false;
         while (!salir)
         {
@@ -17,7 +19,12 @@ class Program
             Console.WriteLine("2. Realizar devolución");
             Console.WriteLine("3. Reservar libro");
             Console.WriteLine("4. Ver detalle de socio");
-            Console.WriteLine("5. Salir");
+            Console.WriteLine("5. Libros más prestados");
+            Console.WriteLine("6. Socios con multas pendientes");
+            Console.WriteLine("7. Préstamos vencidos");
+            Console.WriteLine("8. Disponibilidad de un libro");
+            Console.WriteLine("9. Historial de un socio");
+            Console.WriteLine("10. Salir");
             Console.Write("\nSeleccione una opción: ");
 
             string opcion = Console.ReadLine()?.Trim() ?? "";
@@ -28,8 +35,135 @@ class Program
                 case "2": FlujoDevolucion(servicio); break;
                 case "3": FlujoReserva(servicio); break;
                 case "4": FlujoDetalleSocio(servicio); break;
-                case "5": salir = true; break;
+                case "5": FlujoLibrosMasPrestados(servicio); break;
+                case "6": FlujoSociosConMultas(servicio); break;
+                case "7": FlujoPrestamosVencidos(servicio); break;
+                case "8": FlujoDisponibilidadLibro(servicio); break;
+                case "9": FlujoHistorialSocio(servicio); break;
+                case "10": salir = true; break;
                 default: Console.WriteLine("Opción inválida. Intente nuevamente."); break;
+            }
+        }
+    }
+
+    static void MostrarLibros(ServicioBiblioteca servicio)
+    {
+        var libros = servicio.ObtenerTodosLosLibros();
+        Console.WriteLine("\n--- LISTA DE LIBROS DISPONIBLES ---");
+        Console.WriteLine(new string('-', 80));
+        foreach (var libro in libros)
+        {
+            int disp = servicio.ObtenerCopiasDisponibles(libro.ISBN);
+            Console.WriteLine($"ISBN: {libro.ISBN}");
+            Console.WriteLine($"Título: {libro.Titulo}");
+            Console.WriteLine($"Autor: {libro.Autor}");
+            Console.WriteLine($"Género: {libro.Genero}");
+            Console.WriteLine($"Copias disponibles: {disp}/{libro.CantidadCopias}");
+            Console.WriteLine();
+        }
+    }
+
+    static void FlujoLibrosMasPrestados(ServicioBiblioteca servicio)
+    {
+        var libros = servicio.ObtenerLibrosMasPrestados(5);
+        Console.WriteLine("\n--- LIBROS MÁS PRESTADOS ---");
+        if (libros.Count == 0)
+        {
+            Console.WriteLine("No hay préstamos registrados.");
+            return;
+        }
+        for (int i = 0; i < libros.Count; i++)
+        {
+            var (libro, cantidad) = libros[i];
+            Console.WriteLine($"{i + 1}. {libro.Titulo} ({libro.Autor}) - {cantidad} préstamo(s)");
+        }
+    }
+
+    static void FlujoSociosConMultas(ServicioBiblioteca servicio)
+    {
+        var socios = servicio.ObtenerSociosConMultasPendientes();
+        Console.WriteLine("\n--- SOCIOS CON MULTAS PENDIENTES ---");
+        if (socios.Count == 0)
+        {
+            Console.WriteLine("No hay socios con multas pendientes.");
+            return;
+        }
+        foreach (var (socio, total) in socios)
+        {
+            Console.WriteLine($"Socio N°{socio.NroSocio}: {socio.Nombre} {socio.Apellido} - Total multas: ${total:F2}");
+        }
+    }
+
+    static void FlujoPrestamosVencidos(ServicioBiblioteca servicio)
+    {
+        var prestamos = servicio.ObtenerPrestamosVencidos();
+        Console.WriteLine("\n--- PRÉSTAMOS VENCIDOS ---");
+        if (prestamos.Count == 0)
+        {
+            Console.WriteLine("No hay préstamos vencidos.");
+            return;
+        }
+        foreach (var p in prestamos)
+        {
+            Console.WriteLine($"Socio: {p.Socio.Nombre} {p.Socio.Apellido} (N°{p.Socio.NroSocio})");
+            Console.WriteLine($"Libro: {p.Libro.Titulo} (ISBN: {p.LibroISBN})");
+            Console.WriteLine($"Fecha de préstamo: {p.FechaPrestamo}");
+            Console.WriteLine($"Fecha de vencimiento: {p.FechaVencimiento}");
+            Console.WriteLine();
+        }
+    }
+
+    static void FlujoDisponibilidadLibro(ServicioBiblioteca servicio)
+    {
+        Console.Write("\nIngrese ISBN o título del libro: ");
+        string busqueda = Console.ReadLine()?.Trim() ?? "";
+
+        var (libro, disponibles, reservasPendientes) = servicio.ObtenerDisponibilidadLibro(busqueda);
+        if (libro == null)
+        {
+            Console.WriteLine("Libro no encontrado.");
+            return;
+        }
+
+        Console.WriteLine("\n--- DISPONIBILIDAD DEL LIBRO ---");
+        Console.WriteLine($"ISBN: {libro.ISBN}");
+        Console.WriteLine($"Título: {libro.Titulo}");
+        Console.WriteLine($"Autor: {libro.Autor}");
+        Console.WriteLine($"Copias disponibles: {disponibles}/{libro.CantidadCopias}");
+        Console.WriteLine($"Reservas pendientes: {reservasPendientes}");
+    }
+
+    static void FlujoHistorialSocio(ServicioBiblioteca servicio)
+    {
+        Console.Write("\nIngrese número de socio: ");
+        if (!int.TryParse(Console.ReadLine()?.Trim(), out int socioId))
+        {
+            Console.WriteLine("Número de socio inválido.");
+            return;
+        }
+
+        var (prestamos, reservas) = servicio.ObtenerHistorialSocio(socioId);
+        Console.WriteLine("\n--- HISTORIAL DEL SOCIO ---");
+
+        Console.WriteLine("\nPréstamos:");
+        if (prestamos.Count == 0)
+            Console.WriteLine("  No hay préstamos registrados.");
+        else
+        {
+            foreach (var p in prestamos)
+            {
+                Console.WriteLine($"  {p.Libro.Titulo} | Prestado: {p.FechaPrestamo} | Vence: {p.FechaVencimiento} | Estado: {p.Estado.Nombre}");
+            }
+        }
+
+        Console.WriteLine("\nReservas:");
+        if (reservas.Count == 0)
+            Console.WriteLine("  No hay reservas registradas.");
+        else
+        {
+            foreach (var r in reservas)
+            {
+                Console.WriteLine($"  {r.Libro.Titulo} | Fecha: {r.FechaReserva} | Estado: {r.Estado.Nombre}");
             }
         }
     }

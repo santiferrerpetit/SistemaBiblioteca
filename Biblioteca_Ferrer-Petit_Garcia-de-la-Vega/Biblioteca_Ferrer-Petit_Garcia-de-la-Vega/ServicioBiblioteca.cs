@@ -164,4 +164,79 @@ public class ServicioBiblioteca
             .Include(s => s.Multas)
             .FirstOrDefault(s => s.NroSocio == socioId);
     }
+
+    public List<Libro> ObtenerTodosLosLibros()
+    {
+        return _context.Libros
+            .OrderBy(l => l.Titulo)
+            .ToList();
+    }
+
+    public List<(Libro libro, int cantidadPrestamos)> ObtenerLibrosMasPrestados(int cantidad = 5)
+    {
+        return _context.Prestamos
+            .Include(p => p.Libro)
+            .GroupBy(p => p.Libro)
+            .Select(g => new { Libro = g.Key, Cantidad = g.Count() })
+            .OrderByDescending(x => x.Cantidad)
+            .Take(cantidad)
+            .ToList()
+            .Select(x => (x.Libro, x.Cantidad))
+            .ToList();
+    }
+
+    public List<(Socio socio, decimal totalMultas)> ObtenerSociosConMultasPendientes()
+    {
+        return _context.Socios
+            .Include(s => s.Multas)
+            .Include(s => s.TipoSocio)
+            .Where(s => s.Multas.Any(m => m.Pagada == 0))
+            .AsEnumerable()
+            .Select(s => (s, s.Multas.Where(m => m.Pagada == 0).Sum(m => m.Monto)))
+            .ToList();
+    }
+
+    public List<Prestamo> ObtenerPrestamosVencidos()
+    {
+        string hoy = DateTime.Now.ToString("yyyy-MM-dd");
+        return _context.Prestamos
+            .Include(p => p.Socio)
+            .Include(p => p.Libro)
+            .Include(p => p.Estado)
+            .Where(p => p.EstadoId != 2 && string.Compare(p.FechaVencimiento, hoy) < 0)
+            .ToList();
+    }
+
+    public (Libro? libro, int disponibles, int reservasPendientes) ObtenerDisponibilidadLibro(string isbnOTitulo)
+    {
+        var libro = _context.Libros
+            .FirstOrDefault(l => l.ISBN == isbnOTitulo || l.Titulo.Contains(isbnOTitulo));
+
+        if (libro == null) return (null, 0, 0);
+
+        int disponibles = ObtenerCopiasDisponibles(libro.ISBN);
+        int reservasPendientes = _context.Reservas
+            .Count(r => r.LibroISBN == libro.ISBN && r.EstadoId == 1);
+
+        return (libro, disponibles, reservasPendientes);
+    }
+
+    public (List<Prestamo> prestamos, List<Reserva> reservas) ObtenerHistorialSocio(int socioId)
+    {
+        var prestamos = _context.Prestamos
+            .Include(p => p.Libro)
+            .Include(p => p.Estado)
+            .Where(p => p.SocioId == socioId)
+            .OrderByDescending(p => p.FechaPrestamo)
+            .ToList();
+
+        var reservas = _context.Reservas
+            .Include(r => r.Libro)
+            .Include(r => r.Estado)
+            .Where(r => r.SocioId == socioId)
+            .OrderByDescending(r => r.FechaReserva)
+            .ToList();
+
+        return (prestamos, reservas);
+    }
 }
